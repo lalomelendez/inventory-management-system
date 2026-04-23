@@ -1,0 +1,22 @@
+{
+  "name": "antigravity-turborepo-exercise-01",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "generate": "turbo run generate",
+    "setup:env": "cp packages/db/.env.example packages/db/.env && cp apps/api/.env.example apps/api/.env"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.32.1",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "turbo": "^2.9.6",
+    "typescript": "^6.0.3"
+  }
+}

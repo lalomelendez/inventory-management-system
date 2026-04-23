@@ -1,0 +1,22 @@
+# Dependencies
+node_modules
+.pnpm-debug.log
+
+# Build Outputs
+dist
+.next
+out
+.turbo
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# Prisma
+/packages/db/src/generated
+
+# OS files
+.DS_Store
+Thumbs.db

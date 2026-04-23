@@ -4,7 +4,7 @@ services:
   postgres:
     image: postgres:15-alpine
     # UNIQUE NAME: Prevents collisions with other local projects
-    container_name: enterprise_system_db
+    container_name: enterprise_system_db_one
     restart: no
     environment:
       POSTGRES_USER: admin

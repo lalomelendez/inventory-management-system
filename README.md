@@ -1,17 +1,15 @@
+Her
+# 🌌 Enterprise Operations MVP
 
+> A highly opinionated, end-to-end type-safe monorepo designed for SME process automation, supply chain logistics mapping, and HR administrative workflows.
 
-```markdown
-# 🌌 Turborepo Fullstack Template
-
-Welcome to the Enterprise Turborepo Template. This is not a standard "getting started" scaffold; it is a battle-tested, highly opinionated monorepo architecture designed for scale, team velocity, and strict type safety.
-
-Built on **Turborepo 2.x** and **pnpm workspaces**, this template bridges a **Next.js** frontend and a **NestJS** backend using a shared "Governing Packages" model. It includes built-in defenses against common monorepo pitfalls, including strict workspace hygiene, IPv4-enforced Docker networking, and deterministic type generation.
+This repository serves as the foundational architecture for building robust operational systems. Built on **Turborepo 2.x** and **pnpm workspaces**, it bridges a **Next.js** frontend and a **NestJS** backend using a strict "Governing Packages" model. It features relational data management, custom JWT authentication, and strict Role-Based Access Control (RBAC).
 
 ---
 
 ## 🏗️ System Architecture
 
-Our workspace follows a topological dependency graph. The architecture is divided into isolated applications and centralized, immutable logic packages.
+Our workspace follows a topological dependency graph. The architecture is divided into isolated applications and centralized, immutable logic packages to ensure frontend and backend systems never fall out of sync.
 
 ```text
 .
@@ -19,35 +17,31 @@ Our workspace follows a topological dependency graph. The architecture is divide
 │   ├── api/                # NestJS Backend (Strictly Port 3001)
 │   └── web/                # Next.js Frontend (Port 3000)
 ├── packages/
-│   ├── db/                 # Isolated Prisma Client & Schema
+│   ├── db/                 # Isolated Prisma Client, SSOT Schema, and Migrations
 │   ├── typescript-config/  # Native TS 6.0+ Governing Rules
 │   └── validation/         # Zod SSOT (Single Source of Truth) Schemas
 └── docker-compose.yml      # Containerized PostgreSQL with Health Checks
 ```
 
 ### The "Governing Packages" Pattern
-
-Rather than duplicating configurations, the `apps/` consume logic from the `packages/`:
-* **`@repo/typescript-config`**: Centralizes TS rules using a native `tsc --emitDeclarationOnly` build strategy to ensure clean, warning-free IDE integration.
-* **`@repo/validation`**: The golden thread of the monorepo. Shared Zod schemas guarantee that the frontend form validation and backend payload validation are mathematically identical and inherently synced.
-* **`@repo/db`**: Encapsulates the Prisma ORM. Applications do not manage database connections directly; they import the compiled `@repo/db` client, preventing connection leaks and scope pollution.
+* **`@repo/typescript-config`**: Centralizes TS rules using a native `tsc --emitDeclarationOnly` build strategy for clean IDE integration.
+* **`@repo/validation`**: The golden thread of the monorepo. Shared Zod schemas guarantee that frontend form validation and backend payload validation are mathematically identical.
+* **`@repo/db`**: Encapsulates the Prisma ORM. Applications do not manage database connections directly; they import the compiled `@repo/db` client, preventing connection leaks.
 
 ---
 
-## 🛡️ Enterprise Robustness & Defensive Engineering
+## 🔐 Core Features & Domain Logic
 
-This template is pre-configured to solve the most common bottlenecks in local development:
-
-1. **The IPv4 DNS Bypass:** Modern Node.js versions default to resolving `localhost` to the IPv6 loopback (`::1`), which frequently fails to connect to Dockerized databases mapping to IPv4. All connection strings here explicitly target `127.0.0.1` to eliminate silent network drops.
-2. **Health-Aware Boot Sequences:** The Docker Compose file utilizes `pg_isready` health checks. Turborepo orchestration relies on this to ensure the database is fully initialized before the applications attempt to connect, eliminating `Connection Refused` race conditions.
-3. **Strict Port Isolation:** The NestJS API is hardcoded to port `3001`, and Next.js to `3000`. This prevents `EADDRINUSE` conflicts during parallel boot sequences.
-4. **Workspace Hygiene Lock:** Framework generators (like `create-next-app`) often spawn rogue lockfiles. This environment relies strictly on a single root `pnpm-lock.yaml` to prevent dependency fragmentation.
+* **Spec-Driven Development (SDD):** All data flows begin with strict schema definitions (Prisma/Zod) before any business logic is written, completely eliminating API miscommunication bugs.
+* **Relational Inventory Modeling:** Full CRUD and eager-loading capabilities connecting nested entities (e.g., Products and Categories).
+* **Custom JWT Authentication:** A fully owned, stateless cryptographic authentication engine protecting the API vault.
+* **Role-Based Access Control (RBAC):** Database-enforced role hierarchies (`ADMIN`, `HR`, `LOGISTICS`, `USER`) to ensure strict boundary management across corporate departments.
 
 ---
 
 ## 🚀 The Golden Path (Local Setup)
 
-To guarantee a deterministic setup, follow this exact sequence when cloning the repository for the first time. 
+To guarantee a deterministic setup, follow this exact sequence when cloning the repository. 
 
 **Prerequisites:**
 * Node.js (v18+)
@@ -61,13 +55,13 @@ pnpm install
 ```
 
 ### 2. Synchronize Environment Variables
-Hydrate your local `.env` files from the `.env.example` templates to apply the IPv4 networking fixes.
+Hydrate your local `.env` files from the `.env.example` templates to apply the required IPv4 networking fixes (`127.0.0.1`).
 ```bash
 pnpm run setup:env
 ```
 
 ### 3. Boot Infrastructure
-Start the PostgreSQL container. It will run in the background.
+Start the PostgreSQL container. It utilizes `pg_isready` health checks to prevent boot race conditions.
 ```bash
 docker compose up -d
 ```
@@ -75,7 +69,7 @@ docker compose up -d
 ### 4. Hydrate the Database
 Push the Prisma schema to your container and generate the typed DB client.
 ```bash
-pnpm run generate
+pnpm --filter @repo/db exec prisma db push
 ```
 
 ### 5. Build Governing Packages
@@ -85,7 +79,7 @@ pnpm run build --filter="./packages/*"
 ```
 
 ### 6. Start the Engine
-Boot the entire stack. Turborepo will start both the Next.js and NestJS servers in parallel, streaming all logs directly to this terminal.
+Boot the entire stack. Turborepo will start both the Next.js and NestJS servers in parallel, streaming all logs directly to the terminal.
 ```bash
 pnpm dev
 ```
@@ -94,7 +88,7 @@ pnpm dev
 
 ## 🚑 Troubleshooting & Runbook
 
-In a high-performance monorepo, processes can occasionally hang or caches can false-positive. Use these commands to unblock yourself instantly.
+In a high-performance monorepo, use these commands to unblock yourself instantly.
 
 ### Port Already in Use (`EADDRINUSE: :::3001`)
 If a background process is holding a port hostage after a crash (Linux/macOS):
@@ -107,16 +101,17 @@ If your database schema drifts too far or the container fails its health check, 
 ```bash
 docker compose down -v
 docker compose up -d
-pnpm run generate
+pnpm --filter @repo/db exec prisma db push
 ```
 
-### Stale Monorepo Cache
-If code changes aren't reflecting or Zod schemas seem out of sync, nuke the Turbo cache and rebuild.
+### Stale Monorepo Cache (Type Synchronization Issues)
+If code changes aren't reflecting or shared schemas seem out of sync, nuke the Turbo cache and rebuild the governing packages.
 ```bash
 rm -rf .turbo
+find . -name "dist" -type d -prune -exec rm -rf '{}' +
 pnpm run build --filter="./packages/*"
 ```
 
 ---
-* Maintained by @lalomelendez *
+*Maintained by @lalomelendez *
 ```

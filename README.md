@@ -1,11 +1,13 @@
-Her
+
+
+
 # 🌌 Enterprise Operations MVP
 
 > A highly opinionated, end-to-end type-safe monorepo designed for SME process automation, supply chain logistics mapping, and HR administrative workflows.
 
 This repository serves as the foundational architecture for building robust operational systems. Built on **Turborepo 2.x** and **pnpm workspaces**, it bridges a **Next.js** frontend and a **NestJS** backend using a strict "Governing Packages" model. It features relational data management, custom JWT authentication, and strict Role-Based Access Control (RBAC).
 
----
+
 
 ## 🏗️ System Architecture
 
@@ -113,5 +115,5 @@ pnpm run build --filter="./packages/*"
 ```
 
 ---
-*Maintained by @lalomelendez *
+*Maintained by the Core Engineering Team.*
 ```

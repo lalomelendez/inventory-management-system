@@ -76,3 +76,16 @@ Fill out the form (e.g., Name: "Mechanical Keyboard", Price: 150).
 Submit the form. You will be redirected back to the home page, where your new product will appear in the list.
 Validation Test: Try submitting a negative price or empty name; the form/backend will prevent the creation and show an error.
 The monorepo is still running in the background. Ready for Phase 3!
+
+
+I have identified the issue. The error occurred because CORS (Cross-Origin Resource Sharing) was not enabled on the NestJS backend, which prevented the frontend Client Component from communicating with the API.
+
+The "404" in your error message was likely a result of the browser's OPTIONS preflight request failing to find the appropriate CORS headers, which NestJS now handles correctly.
+
+Fixes Applied:
+Enabled CORS: Updated 
+
+main.ts
+ to include app.enableCors().
+Verified Routing: Confirmed that the NestJS logs show both {/products, GET} and {/products, POST} routes are successfully mapped and live.
+The API has automatically restarted with these changes. Please try submitting the form again; it should now successfully create the product and redirect you to the list!

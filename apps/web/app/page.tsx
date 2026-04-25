@@ -4,9 +4,17 @@ import DeleteProductButton from "../components/delete-button";
 
 type ProductWithCategory = Product & { category?: Category | null };
 
+import { cookies } from 'next/headers';
+
 async function getProducts(): Promise<ProductWithCategory[]> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
   const response = await fetch("http://127.0.0.1:3001/products", {
     cache: "no-store", // Ensure we get fresh data
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
   
   if (!response.ok) {
@@ -15,6 +23,7 @@ async function getProducts(): Promise<ProductWithCategory[]> {
   
   return response.json();
 }
+
 
 export default async function Home() {
   const products = await getProducts();

@@ -8,13 +8,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ADMIN
+  HR
+  LOGISTICS
+  USER
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  name      String
-  password  String
+  password  String   // Will store the bcrypt hash, NEVER plain text
+  role      Role     @default(USER)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+
 
 model Product {
   id         String   @id @default(cuid())

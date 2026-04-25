@@ -15,3 +15,17 @@ model User {
   password  String
   createdAt DateTime @default(now())
 }
+
+model Product {
+  id         String   @id @default(cuid())
+  title      String
+  price      Float
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
+}

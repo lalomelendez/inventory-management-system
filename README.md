@@ -1,11 +1,7 @@
-Here is a master `README.md` crafted specifically for an enterprise-level template. It highlights not just *how* to use the repository, but *why* the architecture is built this way, emphasizing the defensive engineering decisions we established.
 
-You can copy and paste this directly into your project root.
-
-***
 
 ```markdown
-# 🌌 Enterprise Turborepo Fullstack Template
+# 🌌 Turborepo Fullstack Template
 
 Welcome to the Enterprise Turborepo Template. This is not a standard "getting started" scaffold; it is a battle-tested, highly opinionated monorepo architecture designed for scale, team velocity, and strict type safety.
 

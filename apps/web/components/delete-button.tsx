@@ -2,23 +2,32 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Role } from "@repo/db/enums";
+import { proxyApi } from "../app/actions/api";
 
-export default function DeleteProductButton({ id }: { id: string }) {
+export default function DeleteProductButton({ 
+  id, 
+  userRole 
+}: { 
+  id: string, 
+  userRole?: Role | string 
+}) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Strictly enforce that only ADMIN can see this button
+  if (userRole !== Role.ADMIN) {
+    return null;
+  }
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     
     setIsDeleting(true);
     try {
-      const response = await fetch(`http://127.0.0.1:3001/products/${id}`, {
+      await proxyApi(`/products/${id}`, {
         method: "DELETE",
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete product");
-      }
 
       router.refresh();
     } catch (err) {

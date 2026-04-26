@@ -12,4 +12,12 @@ export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
   categoryId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  supplierId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  locationId: string;
 }

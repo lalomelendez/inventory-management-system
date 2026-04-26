@@ -1,12 +1,15 @@
-import { Product, Category } from "@repo/db";
+import { Role } from "@repo/db/enums";
+import type { Product, Category, Prisma, Supplier, Location } from "@repo/db";
 import Link from "next/link";
 import DeleteProductButton from "../components/delete-button";
-
-type ProductWithCategory = Product & { category?: Category | null };
-
 import { cookies } from 'next/headers';
+import { getUserSession } from "../lib/session";
 
-async function getProducts(): Promise<ProductWithCategory[]> {
+type FullProduct = Prisma.ProductGetPayload<{
+  include: { category: true; supplier: true; location: true; stockMovements: true }
+}> & { currentStock: number };
+
+async function getProducts(): Promise<FullProduct[]> {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
@@ -27,6 +30,10 @@ async function getProducts(): Promise<ProductWithCategory[]> {
 
 export default async function Home() {
   const products = await getProducts();
+  const session = await getUserSession();
+  const userRole = session?.role;
+
+  const canCreate = userRole === Role.ADMIN || userRole === Role.LOGISTICS;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 p-8 font-sans">
@@ -34,18 +41,28 @@ export default async function Home() {
         <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div className="space-y-4">
             <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-zinc-50 to-zinc-500 bg-clip-text text-transparent">
-              Product Specification
+              Logistics Dashboard
             </h1>
             <p className="text-zinc-400 text-lg">
-              Rendering data directly from the NestJS + Prisma backend.
+              Mapping products to physical locations and vendors.
             </p>
           </div>
-          <Link 
-            href="/create"
-            className="inline-flex items-center justify-center bg-zinc-50 text-zinc-950 px-6 py-3 rounded-full font-bold hover:bg-white transition-all transform hover:scale-105 active:scale-95"
-          >
-            + Add Product
-          </Link>
+          <div className="flex gap-4">
+            <Link 
+              href="/purchase-orders"
+              className="inline-flex items-center justify-center border border-zinc-800 text-zinc-400 px-6 py-3 rounded-full font-bold hover:text-zinc-100 hover:border-zinc-700 transition-all"
+            >
+              Operations Center
+            </Link>
+            {canCreate && (
+              <Link 
+                href="/create"
+                className="inline-flex items-center justify-center bg-zinc-50 text-zinc-950 px-6 py-3 rounded-full font-bold hover:bg-white transition-all transform hover:scale-105 active:scale-95"
+              >
+                + Add Product
+              </Link>
+            )}
+          </div>
         </header>
 
         <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -75,20 +92,53 @@ export default async function Home() {
                       ID: {product.id}
                     </p>
                   </div>
-                  <div className="flex items-baseline gap-1">
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-950/50 border border-zinc-800/50">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Current Stock</span>
+                      <span className={`text-lg font-mono font-bold ${product.currentStock > 10 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                        {product.currentStock}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 px-1">
+                      {product.supplier && (
+                        <div className="flex items-center gap-2 text-[10px] text-zinc-500">
+                          <span className="font-bold uppercase tracking-tighter opacity-50 text-[9px]">Supplier:</span>
+                          <span className="text-zinc-300 truncate">{product.supplier.name}</span>
+                        </div>
+                      )}
+                      {product.location && (
+                        <div className="flex items-center gap-2 text-[10px] text-zinc-500">
+                          <span className="font-bold uppercase tracking-tighter opacity-50 text-[9px]">Location:</span>
+                          <span className="text-zinc-300">{product.location.name} ({product.location.aisle}-{product.location.shelf})</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-baseline gap-1 mt-2">
                     <span className="text-2xl font-bold text-zinc-50">${product.price.toFixed(2)}</span>
                     <span className="text-xs text-zinc-500 uppercase font-medium tracking-tighter">USD</span>
                   </div>
                 </div>
                 
                 <div className="mt-6 pt-4 border-t border-zinc-800/50 flex items-center justify-between">
-                  <Link 
-                    href={`/products/${product.id}`}
-                    className="text-zinc-300 hover:text-white text-sm font-medium transition-colors"
-                  >
-                    Edit
-                  </Link>
-                  <DeleteProductButton id={product.id} />
+                  <div className="flex gap-4">
+                    <Link 
+                      href={`/products/${product.id}`}
+                      className="text-zinc-300 hover:text-white text-sm font-medium transition-colors"
+                    >
+                      Edit
+                    </Link>
+                    <Link 
+                      href={`/products/${product.id}/ledger`}
+                      className="text-zinc-500 hover:text-zinc-300 text-sm font-medium transition-colors"
+                    >
+                      Ledger
+                    </Link>
+                  </div>
+                  <DeleteProductButton id={product.id} userRole={userRole} />
                 </div>
               </div>
             ))

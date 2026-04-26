@@ -2,6 +2,8 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import type { Category, Supplier, Location } from "@repo/db";
+import { proxyApi } from "../../actions/api";
 
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -11,29 +13,40 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     title: "",
     price: "",
     categoryId: "",
+    supplierId: "",
+    locationId: "",
   });
-  const [categories, setCategories] = useState<any[]>([]);
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [prodRes, catRes] = await Promise.all([
-          fetch(`http://127.0.0.1:3001/products/${id}`),
-          fetch(`http://127.0.0.1:3001/categories`)
+        const [product, cats, sups, locs] = await Promise.all([
+          proxyApi(`/products/${id}`),
+          proxyApi(`/categories`),
+          proxyApi(`/suppliers`),
+          proxyApi(`/locations`)
         ]);
 
-        if (!prodRes.ok) throw new Error("Product not found");
-        const product = await prodRes.json();
-        const cats = await catRes.json();
+        if (!product) throw new Error("Product not found");
         
         setCategories(cats);
+        setSuppliers(sups);
+        setLocations(locs);
+
         setFormData({
           title: product.title,
           price: product.price.toString(),
           categoryId: product.categoryId || (cats.length > 0 ? cats[0].id : ""),
+          supplierId: product.supplierId || (sups.length > 0 ? sups[0].id : ""),
+          locationId: product.locationId || (locs.length > 0 ? locs[0].id : ""),
         });
       } catch (err: any) {
         setError(err.message);
@@ -51,22 +64,16 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     setError(null);
 
     try {
-      const response = await fetch(`http://127.0.0.1:3001/products/${id}`, {
+      await proxyApi(`/products/${id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+        body: {
           title: formData.title,
           price: Number(formData.price),
           categoryId: formData.categoryId,
-        }),
+          supplierId: formData.supplierId,
+          locationId: formData.locationId,
+        },
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to update product");
-      }
 
       router.push("/");
       router.refresh();
@@ -112,34 +119,70 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             />
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="category" className="text-sm font-medium text-zinc-400">Category</label>
+              <select
+                id="category"
+                required
+                value={formData.categoryId}
+                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all appearance-none"
+              >
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="price" className="text-sm font-medium text-zinc-400">Price (USD)</label>
+              <input
+                id="price"
+                type="number"
+                step="0.01"
+                required
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all font-medium"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <label htmlFor="category" className="text-sm font-medium text-zinc-400">Category</label>
+            <label htmlFor="supplier" className="text-sm font-medium text-zinc-400">Supplier</label>
             <select
-              id="category"
+              id="supplier"
               required
-              value={formData.categoryId}
-              onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+              value={formData.supplierId}
+              onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
               className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all appearance-none"
             >
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
+              {suppliers.map((supplier) => (
+                <option key={supplier.id} value={supplier.id}>
+                  {supplier.name}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="price" className="text-sm font-medium text-zinc-400">Price (USD)</label>
-            <input
-              id="price"
-              type="number"
-              step="0.01"
+            <label htmlFor="location" className="text-sm font-medium text-zinc-400">Warehouse Location</label>
+            <select
+              id="location"
               required
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all font-medium"
-            />
+              value={formData.locationId}
+              onChange={(e) => setFormData({ ...formData, locationId: e.target.value })}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all appearance-none"
+            >
+              {locations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name} (Aisle {location.aisle})
+                </option>
+              ))}
+            </select>
           </div>
 
           {error && (

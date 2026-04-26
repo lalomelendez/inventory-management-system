@@ -1,6 +1,7 @@
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
+  output        = "../src/generated"
 }
 
 datasource db {
@@ -15,26 +16,101 @@ enum Role {
   USER
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String   // Will store the bcrypt hash, NEVER plain text
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum MovementType {
+  IN         // Receiving new stock
+  OUT        // Shipping or fulfilling orders
+  ADJUSTMENT // Shrinkage, damage, or audits
 }
 
+enum POStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  RECEIVED
+}
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  password       String // Will store the bcrypt hash, NEVER plain text
+  role           Role            @default(USER)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  stockMovements StockMovement[]
+  createdPOs     PurchaseOrder[] @relation("CreatedPOs")
+  approvedPOs    PurchaseOrder[] @relation("ApprovedPOs")
+}
 
 model Product {
-  id         String   @id @default(cuid())
-  title      String
-  price      Float
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  id             String              @id @default(cuid())
+  title          String
+  price          Float
+  categoryId     String?
+  category       Category?           @relation(fields: [categoryId], references: [id])
+  supplierId     String?
+  supplier       Supplier?           @relation(fields: [supplierId], references: [id])
+  locationId     String?
+  location       Location?           @relation(fields: [locationId], references: [id])
+  stockMovements StockMovement[]
+  poItems        PurchaseOrderItem[]
 }
 
 model Category {
   id       String    @id @default(cuid())
   name     String    @unique
   products Product[]
+}
+
+model Supplier {
+  id              String          @id @default(cuid())
+  name            String          @unique
+  contactEmail    String
+  leadTimeDays    Int
+  products        Product[]
+  purchaseOrders PurchaseOrder[]
+}
+
+model Location {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  aisle    String
+  shelf    String
+  products Product[]
+}
+
+model StockMovement {
+  id        String       @id @default(cuid())
+  quantity  Int
+  type      MovementType
+  notes     String?
+  createdAt DateTime     @default(now())
+  productId String
+  product   Product      @relation(fields: [productId], references: [id])
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+}
+
+model PurchaseOrder {
+  id         String              @id @default(cuid())
+  status     POStatus            @default(DRAFT)
+  supplierId String
+  supplier   Supplier            @relation(fields: [supplierId], references: [id])
+  creatorId  String
+  creator    User                @relation("CreatedPOs", fields: [creatorId], references: [id])
+  approverId String?
+  approver   User?               @relation("ApprovedPOs", fields: [approverId], references: [id])
+  items      PurchaseOrderItem[]
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  quantity        Int
+  unitPrice       Float
 }

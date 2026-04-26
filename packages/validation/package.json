@@ -9,7 +9,8 @@
     "dev": "tsup src/index.ts --format cjs,esm --watch"
   },
   "dependencies": {
-    "zod": "^3.23.0"
+    "zod": "^3.23.0",
+    "@repo/db": "workspace:*"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

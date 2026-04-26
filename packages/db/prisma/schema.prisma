@@ -43,17 +43,18 @@ model User {
 }
 
 model Product {
-  id             String              @id @default(cuid())
-  title          String
-  price          Float
-  categoryId     String?
-  category       Category?           @relation(fields: [categoryId], references: [id])
-  supplierId     String?
-  supplier       Supplier?           @relation(fields: [supplierId], references: [id])
-  locationId     String?
-  location       Location?           @relation(fields: [locationId], references: [id])
-  stockMovements StockMovement[]
-  poItems        PurchaseOrderItem[]
+  id               String              @id @default(cuid())
+  title            String
+  price            Float
+  categoryId       String?
+  category         Category?           @relation(fields: [categoryId], references: [id])
+  supplierId       String?
+  supplier         Supplier?           @relation(fields: [supplierId], references: [id])
+  locationId       String?
+  location         Location?           @relation(fields: [locationId], references: [id])
+  minimumStockLevel Int                @default(10)
+  stockMovements   StockMovement[]
+  poItems          PurchaseOrderItem[]
 }
 
 model Category {

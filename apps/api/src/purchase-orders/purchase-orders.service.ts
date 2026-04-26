@@ -54,7 +54,7 @@ export class PurchaseOrdersService {
     // Basic state machine validation
     this.validateStatusTransition(po.status as POStatus, dto.status as POStatus);
 
-    return db.$transaction(async (tx) => {
+    return db.$transaction(async (tx: any) => {
       const updateData: any = { status: dto.status };
 
       // If approving/rejecting, stamp the approver

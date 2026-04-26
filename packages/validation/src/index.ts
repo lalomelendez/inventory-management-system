@@ -22,6 +22,7 @@ export const ProductSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
   supplierId: z.string().min(1, "Supplier is required"),
   locationId: z.string().min(1, "Location is required"),
+  minimumStockLevel: z.number().min(0).optional(),
 });
 
 export type ProductInput = z.infer<typeof ProductSchema>;
@@ -51,3 +52,11 @@ export const UpdatePOStatusSchema = z.object({
 });
 
 export type UpdatePOStatusInput = z.infer<typeof UpdatePOStatusSchema>;
+
+export const CommandCenterResponseSchema = z.object({
+  lowStockItems: z.array(z.any()), // Assuming we don't have full product schema modeled in validation package, but optionally can be defined if needed
+  pendingPOs: z.array(z.any()),
+  recentActivity: z.array(z.any()),
+});
+
+export type CommandCenterResponse = z.infer<typeof CommandCenterResponseSchema>;

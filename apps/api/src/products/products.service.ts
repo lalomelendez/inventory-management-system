@@ -18,7 +18,7 @@ export class ProductsService {
       },
     });
 
-    return products.map(product => this._attachStock(product));
+    return products.map((product: any) => this._attachStock(product));
   }
 
   async findOne(id: string): Promise<ProductWithStock> {

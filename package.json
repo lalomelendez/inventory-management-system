@@ -15,7 +15,10 @@
   "license": "ISC",
   "packageManager": "pnpm@10.32.1",
   "devDependencies": {
+    "@prisma/client": "^6.19.3",
     "@types/node": "^25.6.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
     "turbo": "^2.9.6",
     "typescript": "^6.0.3"
   }
